@@ -22,8 +22,15 @@ class TestCase(BaseModel):
 
     def __init__(self, **data):
         if data.get("created_at") is None:
-            data["created_at"] = datetime.now()
+            data["created_at"] = datetime.now().isoformat()
         super().__init__(**data)
+        
+    def dict(self, *args, **kwargs):
+        d = super().dict(*args, **kwargs)
+        if d.get("created_at"):
+            if isinstance(d["created_at"], datetime):
+                d["created_at"] = d["created_at"].isoformat()
+        return d
 
 class TestPlan(BaseModel):
     id: str
@@ -34,8 +41,15 @@ class TestPlan(BaseModel):
 
     def __init__(self, **data):
         if data.get("created_at") is None:
-            data["created_at"] = datetime.now()
+            data["created_at"] = datetime.now().isoformat()
         super().__init__(**data)
+        
+    def dict(self, *args, **kwargs):
+        d = super().dict(*args, **kwargs)
+        if d.get("created_at"):
+            if isinstance(d["created_at"], datetime):
+                d["created_at"] = d["created_at"].isoformat()
+        return d
 
 class ExecutionResult(BaseModel):
     test_case_id: str
@@ -61,8 +75,15 @@ class TestReport(BaseModel):
 
     def __init__(self, **data):
         if data.get("created_at") is None:
-            data["created_at"] = datetime.now()
+            data["created_at"] = datetime.now().isoformat()
         super().__init__(**data)
+        
+    def dict(self, *args, **kwargs):
+        d = super().dict(*args, **kwargs)
+        if d.get("created_at"):
+            if isinstance(d["created_at"], datetime):
+                d["created_at"] = d["created_at"].isoformat()
+        return d
 
 class PlanRequest(BaseModel):
     target_url: str = "https://play.ezygamers.com/"

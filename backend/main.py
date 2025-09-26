@@ -54,14 +54,22 @@ async def execute_tests(request: PlanRequest) -> TestReport:
     """Execute complete testing workflow"""
     global current_report
     try:
+        if not request.target_url:
+            raise ValueError("Target URL is required")
+            
         report = await orchestrator.run_complete_workflow(
             target_url=request.target_url,
             num_cases=request.num_test_cases,
             top_n=10  # Always execute top 10
         )
+        
+        if not report:
+            raise ValueError("No test report generated")
+            
         current_report = report
         return report
     except Exception as e:
+        print(f"Execution error: {str(e)}")  # Log the error
         raise HTTPException(status_code=500, detail=f"Test execution failed: {str(e)}")
 
 @app.get("/report")
@@ -71,6 +79,55 @@ async def get_latest_report() -> TestReport:
     if current_report is None:
         raise HTTPException(status_code=404, detail="No test report available")
     return current_report
+
+@app.post("/rank")
+async def rank_test_cases(test_plan: TestPlan) -> TestPlan:
+    """Rank test cases in the test plan"""
+    try:
+        ranker = orchestrator.ranker
+        top_cases = ranker.rank_and_select(test_plan, top_n=len(test_plan.test_cases))
+        test_plan.test_cases = top_cases
+        return test_plan
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to rank test cases: {str(e)}")
+
+@app.post("/analyze")
+async def analyze_results(report: TestReport):
+    """Analyze test results and provide insights"""
+    try:
+        from agents.analyzer import AnalyzerAgent
+        analyzer = AnalyzerAgent()
+        analysis = analyzer.analyze_results(report.execution_results)
+        
+        # Calculate quality score based on pass rate and performance
+        total_tests = len(report.execution_results)
+        passed = sum(1 for r in report.execution_results if r.status == "passed")
+        pass_rate = (passed / total_tests) * 100 if total_tests > 0 else 0
+        
+        # Quality score formula: 70% pass rate + 30% performance
+        avg_duration = sum(r.execution_time for r in report.execution_results) / total_tests if total_tests > 0 else 0
+        perf_score = max(0, 100 - (avg_duration * 5))  # Lower duration = better score
+        quality_score = (pass_rate * 0.7) + (perf_score * 0.3)
+        
+        # Add scores to analysis
+        analysis["quality_score"] = round(quality_score, 2)
+        analysis["pass_rate"] = round(pass_rate, 2)
+        analysis["performance_score"] = round(perf_score, 2)
+        
+        # Add recommendations
+        recommendations = []
+        if pass_rate < 80:
+            recommendations.append("Improve test case reliability")
+        if avg_duration > 5:
+            recommendations.append("Optimize test execution speed")
+        if total_tests < 5:
+            recommendations.append("Increase test coverage")
+        analysis["recommendations"] = recommendations
+        
+        return analysis
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 @app.get("/health")
 async def health_check():

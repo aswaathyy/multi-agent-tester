@@ -19,7 +19,7 @@ class AnalyzerAgent:
         failed = total - passed
 
         # Duration analysis
-        durations = [r.duration for r in execution_results]
+        durations = [r.execution_time for r in execution_results]
         avg_duration = sum(durations) / len(durations)
         min_duration = min(durations)
         max_duration = max(durations)

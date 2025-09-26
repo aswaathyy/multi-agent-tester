@@ -107,24 +107,24 @@ def main():
             if st.button("Execute Test Cases", use_container_width=True):
                 with st.spinner(f"Executing top {num_to_execute} test cases..."):
                     try:
-                        execution_request = {
-                            "test_plan": st.session_state["ranked_plan"],
-                            "num_cases": num_to_execute
-                        }
+                        # Use the same request format as plan generation
                         response = requests.post(
                             f"{API_BASE_URL}/execute",
-                            json=execution_request,
+                            json={
+                                "target_url": target_url,
+                                "num_test_cases": num_to_execute
+                            },
                             timeout=120
                         )
                         if response.status_code == 200:
                             results = response.json()
                             st.session_state["execution_results"] = results
-                            st.success(f"✅ Executed {len(results['results'])} test cases!")
+                            st.success(f"✅ Executed {results['total_tests']} test cases!")
 
                             # Display execution summary
                             st.subheader("Execution Summary")
-                            passed = sum(1 for r in results["results"] if r["status"] == "passed")
-                            failed = len(results["results"]) - passed
+                            passed = results['passed_tests']
+                            failed = results['failed_tests']
                             col_pass, col_fail = st.columns(2)
                             col_pass.metric("Passed", passed)
                             col_fail.metric("Failed", failed)
@@ -145,28 +145,34 @@ def main():
 
         with tab1:
             col1, col2, col3 = st.columns(3)
-            col1.metric("Total Executed", len(results["results"]))
-            passed = sum(1 for r in results["results"] if r["status"] == "passed")
-            col2.metric("Passed", passed)
-            failed = len(results["results"]) - passed
-            col3.metric("Failed", failed)
+            col1.metric("Total Executed", results["total_tests"])
+            col2.metric("Passed", results["passed_tests"])
+            col3.metric("Failed", results["failed_tests"])
 
-            if len(results["results"]) > 0:
-                pass_rate = passed / len(results["results"])
+            if results["total_tests"] > 0:
+                pass_rate = results["passed_tests"] / results["total_tests"]
                 st.progress(pass_rate, text=f"Pass Rate: {pass_rate:.1%}")
 
         with tab2:
-            for i, result in enumerate(results["results"]):
+            for i, result in enumerate(results["execution_results"]):
                 status_emoji = "✅" if result["status"] == "passed" else "❌"
-                with st.expander(f"{status_emoji} {result['test_case_name']}", expanded=False):
+                with st.expander(f"{status_emoji} Test Case {result['test_case_id']}", expanded=False):
                     st.write(f"*Status:* {result['status'].upper()}")
-                    st.write(f"*Duration:* {result.get('duration', 'N/A')} seconds")
+                    st.write(f"*Duration:* {result.get('execution_time', 'N/A')} seconds")
                     if result.get("error_message"):
                         st.error(f"Error: {result['error_message']}")
                     if result.get("artifacts"):
                         st.write("*Artifacts Generated:*")
                         for artifact in result["artifacts"]:
                             st.write(f"- {artifact}")
+                    if result.get("screenshots"):
+                        st.write("*Screenshots:*")
+                        for screenshot in result["screenshots"]:
+                            st.write(f"- {screenshot}")
+                    if result.get("logs"):
+                        st.write("*Logs:*")
+                        for log in result["logs"]:
+                            st.write(f"- {log}")
 
         with tab3:
             st.info("Artifacts are stored in the backend/artifacts/ directory")
@@ -177,7 +183,17 @@ def main():
                 try:
                     response = requests.post(
                         f"{API_BASE_URL}/analyze",
-                        json=results,
+                        json={
+                            "id": results["id"],
+                            "plan_id": results["plan_id"],
+                            "execution_results": results["execution_results"],
+                            "total_tests": results["total_tests"],
+                            "passed_tests": results["passed_tests"],
+                            "failed_tests": results["failed_tests"],
+                            "execution_duration": results["execution_duration"],
+                            "summary": results.get("summary", {}),
+                            "triage_notes": results.get("triage_notes", [])
+                        },
                         timeout=60
                     )
                     if response.status_code == 200:
@@ -185,8 +201,21 @@ def main():
                         st.success("✅ Analysis complete!")
 
                         st.subheader("Test Analysis")
-                        st.write(f"*Overall Quality Score:* {analysis.get('quality_score', 'N/A')}")
-                        st.write(f"*Recommendations:* {analysis.get('recommendations', 'None')}")
+                        quality_score = analysis.get('quality_score', 0)
+                        st.metric("Overall Quality Score", f"{quality_score:.1f}%")
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.metric("Pass Rate", f"{analysis.get('pass_rate', 0):.1f}%")
+                        with col2:
+                            st.metric("Performance Score", f"{analysis.get('performance_score', 0):.1f}%")
+                            
+                        st.subheader("Insights & Recommendations")
+                        if analysis.get('recommendations'):
+                            for rec in analysis['recommendations']:
+                                st.info(f"💡 {rec}")
+                        else:
+                            st.info("No specific recommendations at this time.")
                     else:
                         st.error(f"Analysis failed: {response.text}")
                 except Exception as e:

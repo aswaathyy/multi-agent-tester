@@ -50,8 +50,15 @@ class OrchestratorAgent:
 
         # Save report
         report_file = self.reports_dir / f"report-{datetime.now().strftime('%Y%m%d-%H%M%S')}.json"
+        
+        # Convert report to dict and handle datetime serialization
+        report_dict = report.dict()
+        for k, v in report_dict.items():
+            if isinstance(v, datetime):
+                report_dict[k] = v.isoformat()
+                
         with open(report_file, "w") as f:
-            json.dump(report.dict(), f, indent=2)
+            json.dump(report_dict, f, indent=2)
 
         print(f"Workflow complete! Report saved to {report_file}")
         return report
@@ -68,7 +75,7 @@ class OrchestratorAgent:
         passed = sum(1 for r in execution_results if r.status == "passed")
         failed = total_executed - passed
         avg_duration = (
-            sum(r.duration for r in execution_results) / total_executed
+            sum(r.execution_time for r in execution_results) / total_executed
             if total_executed > 0 else 0
         )
 
@@ -92,12 +99,15 @@ class OrchestratorAgent:
 
         report = TestReport(
             id=f"report-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
-            timestamp=datetime.now().isoformat(),
-            target_url=test_plan.test_cases[0].name if test_plan.test_cases else "unknown",  # Hack for demo
+            plan_id=test_plan.id,
+            execution_results=execution_results,
+            total_tests=total_executed,
+            passed_tests=passed,
+            failed_tests=failed,
+            execution_duration=avg_duration,
             summary=summary,
-            test_plan=test_plan,
-            selected_cases=selected_cases,
-            execution_results=execution_results
+            triage_notes=[],
+            created_at=datetime.now().isoformat()
         )
 
         return report

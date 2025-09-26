@@ -1,0 +1,141 @@
+{
+  "id": "report-20250926-103043",
+  "plan_id": "83a7d999-241d-47a1-bda2-f68b20cdb98f",
+  "execution_results": [
+    {
+      "test_case_id": "aeedc27a-c64d-4053-b7b3-3ba14c124d29",
+      "status": "failed",
+      "execution_time": 0.0,
+      "artifacts": [
+        "artifacts\\20250926-103043"
+      ],
+      "screenshots": [],
+      "logs": [],
+      "error_message": "Execution error: ",
+      "cross_agent_validated": false
+    },
+    {
+      "test_case_id": "c018a3c9-0f45-4fbb-ac18-cf782ad742df",
+      "status": "failed",
+      "execution_time": 0.0,
+      "artifacts": [
+        "artifacts\\20250926-103043"
+      ],
+      "screenshots": [],
+      "logs": [],
+      "error_message": "Execution error: ",
+      "cross_agent_validated": false
+    },
+    {
+      "test_case_id": "c652d2b2-2065-4217-bb75-0816338e8ddc",
+      "status": "failed",
+      "execution_time": 0.0,
+      "artifacts": [
+        "artifacts\\20250926-103043"
+      ],
+      "screenshots": [],
+      "logs": [],
+      "error_message": "Execution error: ",
+      "cross_agent_validated": false
+    },
+    {
+      "test_case_id": "bba7b0c3-d18d-496e-8dc3-2bc48ee08293",
+      "status": "failed",
+      "execution_time": 0.0,
+      "artifacts": [
+        "artifacts\\20250926-103043"
+      ],
+      "screenshots": [],
+      "logs": [],
+      "error_message": "Execution error: ",
+      "cross_agent_validated": false
+    },
+    {
+      "test_case_id": "f4ba260f-969b-4f2f-a4da-65c6413ae21b",
+      "status": "failed",
+      "execution_time": 0.0,
+      "artifacts": [
+        "artifacts\\20250926-103043"
+      ],
+      "screenshots": [],
+      "logs": [],
+      "error_message": "Execution error: ",
+      "cross_agent_validated": false
+    },
+    {
+      "test_case_id": "40460cbe-cd94-4475-b339-6fa9c13b3dee",
+      "status": "failed",
+      "execution_time": 0.0,
+      "artifacts": [
+        "artifacts\\20250926-103043"
+      ],
+      "screenshots": [],
+      "logs": [],
+      "error_message": "Execution error: ",
+      "cross_agent_validated": false
+    },
+    {
+      "test_case_id": "31874cd5-6327-4ac1-855e-35982f973e5e",
+      "status": "failed",
+      "execution_time": 0.0,
+      "artifacts": [
+        "artifacts\\20250926-103043"
+      ],
+      "screenshots": [],
+      "logs": [],
+      "error_message": "Execution error: ",
+      "cross_agent_validated": false
+    },
+    {
+      "test_case_id": "6da274dd-3b04-43c4-9580-590447d1834a",
+      "status": "failed",
+      "execution_time": 0.0,
+      "artifacts": [
+        "artifacts\\20250926-103043"
+      ],
+      "screenshots": [],
+      "logs": [],
+      "error_message": "Execution error: ",
+      "cross_agent_validated": false
+    },
+    {
+      "test_case_id": "406d3313-63ca-4c4d-9182-e3c232c7c525",
+      "status": "failed",
+      "execution_time": 0.0,
+      "artifacts": [
+        "artifacts\\20250926-103043"
+      ],
+      "screenshots": [],
+      "logs": [],
+      "error_message": "Execution error: ",
+      "cross_agent_validated": false
+    },
+    {
+      "test_case_id": "1a018726-40e0-45f0-96a5-cabc45556191",
+      "status": "failed",
+      "execution_time": 0.0,
+      "artifacts": [
+        "artifacts\\20250926-103043"
+      ],
+      "screenshots": [],
+      "logs": [],
+      "error_message": "Execution error: ",
+      "cross_agent_validated": false
+    }
+  ],
+  "total_tests": 10,
+  "passed_tests": 0,
+  "failed_tests": 10,
+  "execution_duration": 0.0,
+  "summary": {
+    "total_generated": 10,
+    "total_selected": 10,
+    "total_executed": 10,
+    "passed": 0,
+    "failed": 10,
+    "average_duration": 0.0,
+    "pass_rate": 0.0
+  },
+  "triage_notes": [],
+  "created_at": "2025-09-26T10:30:43.431883"
+}

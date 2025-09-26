@@ -16,15 +16,33 @@ class ExecutorAgent:
 
     async def execute_tests(self, test_cases: List[TestCase], target_url: str) -> List[ExecutionResult]:
         """Execute test cases and collect results"""
+        if not test_cases:
+            raise ValueError("No test cases provided for execution")
+            
         results = []
         session_id = datetime.now().strftime("%Y%m%d-%H%M%S")
         session_dir = self.artifacts_dir / session_id
         session_dir.mkdir(exist_ok=True)
 
         for test_case in test_cases:
-            print(f"Executing: {test_case.name}")
-            result = await self._execute_single_test(test_case, target_url, session_dir)
-            results.append(result)
+            try:
+                print(f"Executing: {test_case.name}")
+                result = await self._execute_single_test(test_case, target_url, session_dir)
+                results.append(result)
+            except Exception as e:
+                print(f"Error executing test case {test_case.name}: {str(e)}")
+                # Add failed result instead of skipping
+                results.append(
+                    ExecutionResult(
+                        test_case_id=test_case.id,
+                        status="failed",
+                        execution_time=0,
+                        artifacts=[str(session_dir)],
+                        error_message=f"Execution error: {str(e)}",
+                        screenshots=[],
+                        logs=[]
+                    )
+                )
 
         return results
 
@@ -39,11 +57,19 @@ class ExecutorAgent:
     async def _execute_with_playwright(self, test_case: TestCase, target_url: str, session_dir: Path) -> ExecutionResult:
         """Execute test using Playwright"""
         try:
-            from playwright.async_api import async_playwright
+            try:
+                from playwright.async_api import async_playwright
+            except ImportError:
+                raise ImportError("Playwright is not installed. Please run: pip install playwright")
 
             async with async_playwright() as p:
-                browser = await p.chromium.launch()
-                page = await browser.new_page()
+                # Launch browser with more explicit options
+                browser = await p.chromium.launch(
+                    headless=True,  # Run in headless mode
+                    args=['--no-sandbox']  # Add if running in restricted environments
+                )
+                context = await browser.new_context()
+                page = await context.new_page()
 
                 test_dir = session_dir / test_case.id
                 test_dir.mkdir(exist_ok=True)
@@ -65,12 +91,11 @@ class ExecutorAgent:
                     result = ExecutionResult(
                         test_case_id=test_case.id,
                         status="passed" if passed else "failed",
-                        duration=duration,
-                        artifacts_path=str(test_dir),
+                        execution_time=duration,
+                        artifacts=[str(test_dir)],
                         error_message=None if passed else "Validation failed",
-                        console_logs=[],
                         screenshots=["final.png"],
-                        validation_results={"basic_check": passed}
+                        logs=[]
                     )
 
                 except Exception as e:
@@ -80,12 +105,11 @@ class ExecutorAgent:
                     result = ExecutionResult(
                         test_case_id=test_case.id,
                         status="failed",
-                        duration=duration,
-                        artifacts_path=str(test_dir),
+                        execution_time=duration,
+                        artifacts=[str(test_dir)],
                         error_message=str(e),
-                        console_logs=[],
                         screenshots=[],
-                        validation_results={"error": True}
+                        logs=[]
                     )
 
                 await browser.close()
@@ -116,12 +140,11 @@ class ExecutorAgent:
         return ExecutionResult(
             test_case_id=test_case.id,
             status="passed" if passed else "failed",
-            duration=random.uniform(1.0, 5.0),
-            artifacts_path=str(test_dir),
+            execution_time=random.uniform(1.0, 5.0),
+            artifacts=[str(test_dir)],
             error_message=None if passed else "Mock validation failed",
-            console_logs=["Mock execution log"],
             screenshots=["mock_screenshot.png"],
-            validation_results={"mock_check": passed}
+            logs=["Mock execution log"]
         )
 
     async def _simulate_game_interaction(self, page, test_case: TestCase):
